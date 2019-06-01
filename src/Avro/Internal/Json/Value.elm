@@ -66,6 +66,25 @@ parseBytes str =
             Decode.fail ("Not valid binary data: " ++ str)
 
 
+sequenceDecoder : List (Decoder a) -> Decoder (List a)
+sequenceDecoder list =
+    let
+        parseJson json =
+            List.foldr
+                (\dec prev ->
+                    case Decode.decodeValue dec json of
+                        Ok elem ->
+                            Result.map (\ls -> elem :: ls) prev
+
+                        Err err ->
+                            Err err
+                )
+                (Ok [])
+                list
+    in
+    Decode.value |> Decode.andThen (\json -> ResultExtra.toJsonDecoder <| parseJson json)
+
+
 fieldDefaultDecoder : Type -> Decoder (AvroV.Value Type)
 fieldDefaultDecoder typ =
     case typ of
@@ -137,24 +156,6 @@ fieldDefaultDecoder typ =
 
                         Nothing ->
                             Decode.fail ("Field not found: " ++ fld.name)
-
-                sequenceDecoder : List (Decoder a) -> Decoder (List a)
-                sequenceDecoder list =
-                    let
-                        parseJson json =
-                            List.foldr
-                                (\dec prev ->
-                                    case Decode.decodeValue dec json of
-                                        Ok elem ->
-                                            Result.map (\ls -> elem :: ls) prev
-
-                                        Err err ->
-                                            Err err
-                                )
-                                (Ok [])
-                                list
-                    in
-                    Decode.value |> Decode.andThen (\json -> ResultExtra.toJsonDecoder <| parseJson json)
 
                 recordValue pairs =
                     AvroV.Record typ (Dict.fromList pairs)
