@@ -1,7 +1,7 @@
 module Avro.Types exposing (Field, Order(..), Type(..))
 
 import Avro.Types.Value exposing (Value)
-import List.Nonempty as NEL exposing (Nonempty)
+import List.Nonempty exposing (Nonempty)
 
 
 type alias TypeName =
